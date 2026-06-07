@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -32,7 +32,7 @@ const getTillNumber = (level: number) => {
   }
 }
 
-export default function RegisterPage() {
+function RegisterForm() {
   const searchParams = useSearchParams()
 
   const [fullName, setFullName] = useState('')
@@ -184,12 +184,11 @@ export default function RegisterPage() {
             onChange={(e) => setSelectedLevel(Number(e.target.value))}
             className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
           >
-            <option value={1}>Level 1 - KES 800</option>
-            <option value={2}>Level 2 - KES 2,000</option>
-            <option value={3}>Level 3 - KES 5,000</option>
-            <option value={4}>Level 4 - KES 10,000</option>
-            <option value={5}>Level 5 - KES 15,000</option>
-            <option value={6}>Level 6 - KES 30,000</option>
+            {LEVELS.map((level) => (
+              <option key={level.level} value={level.level}>
+                Level {level.level} - KES {level.amount.toLocaleString()}
+              </option>
+            ))}
           </select>
 
           <div className="rounded-lg border border-green-500 p-4">
@@ -243,5 +242,13 @@ export default function RegisterPage() {
         </p>
       </div>
     </main>
+  )
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
   )
 }
