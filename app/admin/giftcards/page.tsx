@@ -17,9 +17,9 @@ export default async function AdminGiftCardsPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
       <AdminNav />
-      <main className="flex-1 p-6 md:p-8">
+      <main className="flex-1 w-full min-w-0 p-4 md:p-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-700 flex items-center gap-3">
             <Gift className="text-brand-400" size={28} /> Gift Cards

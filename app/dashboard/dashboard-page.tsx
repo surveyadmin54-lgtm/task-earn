@@ -4,9 +4,8 @@ import UserNav from '@/components/user/UserNav'
 import CheckInButton from '@/components/user/CheckInButton'
 import ReferralCard from '@/components/user/ReferralCard'
 import Link from 'next/link'
-import { Star, ClipboardList, ArrowDownCircle, TrendingUp, Users, Zap, ChevronRight } from 'lucide-react'
+import { Star, ClipboardList, ArrowDownCircle, TrendingUp, Users, ChevronRight } from 'lucide-react'
 
-// Real WhatsApp SVG icon
 function WhatsAppIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -56,9 +55,9 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
       <UserNav />
-      <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
+      <main className="flex-1 w-full min-w-0 p-4 md:p-8 overflow-x-hidden">
 
         {/* Header */}
         <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
@@ -66,7 +65,12 @@ export default async function DashboardPage() {
             <h1 className="font-display text-2xl md:text-3xl font-700">
               Welcome back, {profile?.full_name?.split(' ')[0] || 'there'} 👋
             </h1>
-            <p className="text-slate-400 mt-1 text-sm">Here is your activity overview.</p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-slate-400 text-sm">Member</p>
+              <span className="bg-brand-500/10 text-brand-400 text-xs font-700 px-2.5 py-0.5 rounded-full border border-brand-500/20">
+                Level {profile?.level ?? 1}
+              </span>
+            </div>
           </div>
           <CheckInButton userId={user.id} alreadyCheckedIn={alreadyCheckedIn} />
         </div>
@@ -87,33 +91,11 @@ export default async function DashboardPage() {
           ))}
         </div>
 
-        {/* Level Progress */}
-        <div className="card mb-6 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Zap size={16} className="text-brand-400" />
-              <span className="font-display font-700 text-sm">Level {profile?.level ?? 1}</span>
-            </div>
-            <Link href="/earnings" className="text-xs text-brand-400 flex items-center gap-1 hover:text-brand-300">
-              View Earnings <ChevronRight size={12} />
-            </Link>
-          </div>
-          <div className="w-full bg-surface rounded-full h-2">
-            <div
-              className="bg-brand-500 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${Math.min(((profile?.points ?? 0) % 500) / 500 * 100, 100)}%` }}
-            />
-          </div>
-          <p className="text-xs text-slate-500 mt-2">
-            {500 - ((profile?.points ?? 0) % 500)} pts to next level
-          </p>
-        </div>
-
         {/* 2-col row: Referral + WhatsApp */}
         <div className="grid md:grid-cols-2 gap-4 mb-6">
           <ReferralCard referralCode={profile?.referral_code ?? ''} referralLink={referralLink} />
 
-          {/* WhatsApp support — real icon */}
+          {/* WhatsApp support */}
           <div className="card flex flex-col justify-between p-5">
             <div>
               <div className="flex items-center gap-3 mb-3">

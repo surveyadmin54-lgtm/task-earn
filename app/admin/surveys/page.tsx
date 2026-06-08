@@ -19,9 +19,9 @@ export default async function AdminSurveysPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
       <AdminNav />
-      <main className="flex-1 p-8">
+      <main className="flex-1 w-full min-w-0 p-4 md:p-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-700">Surveys</h1>
           <p className="text-slate-400 mt-1">Create and manage survey tasks for users.</p>

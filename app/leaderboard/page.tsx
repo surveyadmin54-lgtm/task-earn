@@ -62,9 +62,9 @@ export default async function LeaderboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
       <UserNav />
-      <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
+      <main className="flex-1 w-full min-w-0 p-4 md:p-8 overflow-x-hidden">
         <div className="mb-6">
           <h1 className="font-display text-2xl md:text-3xl font-700 flex items-center gap-3">
             <Trophy className="text-yellow-400" size={26} /> Leaderboard

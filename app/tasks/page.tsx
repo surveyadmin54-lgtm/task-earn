@@ -65,9 +65,9 @@ export default async function TasksPage() {
   const done      = surveys.filter(s =>  completedMap.get(s.id))
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
       <UserNav />
-      <main className="flex-1 p-4 md:p-8 overflow-x-hidden">
+      <main className="flex-1 w-full min-w-0 p-4 md:p-8 overflow-x-hidden">
         {/* Header */}
         <div className="mb-5">
           <div className="flex items-start justify-between flex-wrap gap-3 mb-3">
