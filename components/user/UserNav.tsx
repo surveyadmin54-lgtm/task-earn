@@ -2,14 +2,17 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, User, ClipboardList, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, User, ClipboardList, Trophy, Zap, Bell, LogOut, Menu, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 const links = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/tasks',     label: 'Tasks',     icon: ClipboardList },
-  { href: '/profile',   label: 'Profile',   icon: User },
+  { href: '/dashboard',   label: 'Dashboard',   icon: LayoutDashboard },
+  { href: '/tasks',       label: 'Tasks',        icon: ClipboardList },
+  { href: '/earnings',    label: 'Earnings',     icon: Zap },
+  { href: '/leaderboard', label: 'Leaderboard',  icon: Trophy },
+  { href: '/notifications', label: 'Updates',    icon: Bell },
+  { href: '/profile',     label: 'Profile',      icon: User },
 ]
 
 export default function UserNav() {
@@ -29,14 +32,16 @@ export default function UserNav() {
         {links.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} onClick={() => setOpen(false)}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors
-              ${pathname === href ? 'bg-brand-500/10 text-brand-400 font-600' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+              ${pathname === href
+                ? 'bg-brand-500/10 text-brand-400 font-600 border border-brand-500/20'
+                : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
             <Icon size={18} />{label}
           </Link>
         ))}
       </nav>
       <div className="px-3 py-4 border-t border-surface-border">
         <button onClick={signOut}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-white/5 w-full transition-colors">
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-400 hover:text-red-400 hover:bg-red-500/5 w-full transition-colors">
           <LogOut size={18} /> Sign Out
         </button>
       </div>
@@ -46,7 +51,7 @@ export default function UserNav() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-56 min-h-screen bg-surface-card border-r border-surface-border flex-col">
+      <aside className="hidden md:flex w-56 min-h-screen bg-surface-card border-r border-surface-border flex-col shrink-0">
         <div className="px-5 py-5 border-b border-surface-border">
           <span className="font-display text-xl font-800">Task<span className="text-brand-400">Earn</span></span>
         </div>
@@ -72,7 +77,7 @@ export default function UserNav() {
       )}
 
       {/* Mobile content padding */}
-      <div className="md:hidden h-14 w-full" />
+      <div className="md:hidden h-14 w-full shrink-0" />
     </>
   )
 }

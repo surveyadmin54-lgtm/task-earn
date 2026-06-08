@@ -10,9 +10,12 @@
 
   * { box-sizing: border-box; }
 
+  html { -webkit-text-size-adjust: 100%; }
+
   body {
     background-color: #0f1117;
     color: #f1f5f9;
+    overflow-x: hidden;
   }
 
   input, textarea, select {
@@ -25,6 +28,7 @@
     outline: none;
     transition: border-color 0.15s;
     font-family: var(--font-body);
+    font-size: 16px; /* prevents iOS zoom */
   }
 
   input:focus, textarea:focus, select:focus {
@@ -39,8 +43,8 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-brand-500 hover:bg-brand-400 text-white font-display font-bold
-           px-5 py-2.5 rounded-lg transition-all duration-150 
+    @apply bg-brand-500 hover:bg-brand-400 text-white font-display font-700 
+           px-5 py-2.5 rounded-lg transition-all duration-150 text-center
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
@@ -50,7 +54,7 @@
   }
 
   .card {
-    @apply bg-surface-card border border-surface-border rounded-xl p-6;
+    @apply bg-surface-card border border-surface-border rounded-xl p-5 md:p-6;
   }
 
   .badge-pending  { @apply bg-yellow-500/10 text-yellow-400 text-xs px-2 py-0.5 rounded-full; }
