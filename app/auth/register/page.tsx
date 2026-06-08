@@ -97,6 +97,7 @@ function RegisterForm() {
           payment_level: selectedLevel,
           payment_amount: selectedAmount,
           assigned_till: tillNumber,
+           mpesa_code: mpesaCode,
         })
         .eq('id', data.user.id)
 
