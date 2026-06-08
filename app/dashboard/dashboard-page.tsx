@@ -6,6 +6,7 @@ import ReferralCard from '@/components/user/ReferralCard'
 import Link from 'next/link'
 import { Star, ClipboardList, ArrowDownCircle, TrendingUp, Users, ChevronRight } from 'lucide-react'
 
+// Real WhatsApp SVG icon
 function WhatsAppIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -65,12 +66,7 @@ export default async function DashboardPage() {
             <h1 className="font-display text-2xl md:text-3xl font-700">
               Welcome back, {profile?.full_name?.split(' ')[0] || 'there'} 👋
             </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <p className="text-slate-400 text-sm">Member</p>
-              <span className="bg-brand-500/10 text-brand-400 text-xs font-700 px-2.5 py-0.5 rounded-full border border-brand-500/20">
-                Level {profile?.level ?? 1}
-              </span>
-            </div>
+            <p className="text-slate-400 mt-1 text-sm">Here is your activity overview.</p>
           </div>
           <CheckInButton userId={user.id} alreadyCheckedIn={alreadyCheckedIn} />
         </div>
@@ -95,7 +91,7 @@ export default async function DashboardPage() {
         <div className="grid md:grid-cols-2 gap-4 mb-6">
           <ReferralCard referralCode={profile?.referral_code ?? ''} referralLink={referralLink} />
 
-          {/* WhatsApp support */}
+          {/* WhatsApp support — real icon */}
           <div className="card flex flex-col justify-between p-5">
             <div>
               <div className="flex items-center gap-3 mb-3">
