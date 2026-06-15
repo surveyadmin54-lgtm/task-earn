@@ -4,7 +4,7 @@ import UserNav from '@/components/user/UserNav'
 import CheckInButton from '@/components/user/CheckInButton'
 import ReferralCard from '@/components/user/ReferralCard'
 import Link from 'next/link'
-import { Star, ClipboardList, ArrowDownCircle, TrendingUp, Users, ChevronRight } from 'lucide-react'
+import { Star, ClipboardList, ArrowDownCircle, TrendingUp, Users, Zap, ChevronRight } from 'lucide-react'
 
 // Real WhatsApp SVG icon
 function WhatsAppIcon({ size = 20 }: { size?: number }) {
@@ -38,7 +38,7 @@ export default async function DashboardPage() {
     .order('created_at', { ascending: false }).limit(3)
 
   const { data: referrals } = await supabase
-    .from('profiles').select('id').eq('referred_by', profile?.referral_code ?? '')
+    .from('profiles').select('id').eq('referred_by', user.id)
 
   const todayEAT = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().split('T')[0]
   const alreadyCheckedIn = profile?.last_checkin === todayEAT
@@ -49,7 +49,7 @@ export default async function DashboardPage() {
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=Hi%20TaskEarn%20Support%2C%20I%20need%20help%20with%20my%20account.`
 
   const stats = [
-    { label: 'Points Balance', value: profile?.points ?? 0, icon: Star, color: 'text-brand-400', bg: 'bg-brand-500/10', sub: `KSh ${profile?.points ?? 0}` },
+    { label: 'Points Balance', value: profile?.points ?? 0, icon: Star, color: 'text-brand-400', bg: 'bg-brand-500/10', sub: `$${((profile?.points ?? 0) / 100).toFixed(2)} USD` },
     { label: 'Tasks Completed', value: completedSurveys?.length ?? 0, icon: ClipboardList, color: 'text-blue-400', bg: 'bg-blue-500/10', sub: 'All time' },
     { label: 'Referrals', value: referrals?.length ?? 0, icon: Users, color: 'text-purple-400', bg: 'bg-purple-500/10', sub: `+${(referrals?.length ?? 0) * 100} pts earned` },
     { label: 'Pending Withdrawals', value: withdrawals?.filter((w: any) => w.status === 'pending').length ?? 0, icon: ArrowDownCircle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', sub: 'Awaiting review' },
@@ -85,6 +85,28 @@ export default async function DashboardPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Level Progress */}
+        <div className="card mb-6 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Zap size={16} className="text-brand-400" />
+              <span className="font-display font-700 text-sm">Level {profile?.level ?? 1}</span>
+            </div>
+            <Link href="/earnings" className="text-xs text-brand-400 flex items-center gap-1 hover:text-brand-300">
+              View Earnings <ChevronRight size={12} />
+            </Link>
+          </div>
+          <div className="w-full bg-surface rounded-full h-2">
+            <div
+              className="bg-brand-500 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(((profile?.points ?? 0) % 500) / 500 * 100, 100)}%` }}
+            />
+          </div>
+          <p className="text-xs text-slate-500 mt-2">
+            {500 - ((profile?.points ?? 0) % 500)} pts to next level
+          </p>
         </div>
 
         {/* 2-col row: Referral + WhatsApp */}

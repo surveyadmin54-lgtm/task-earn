@@ -24,14 +24,14 @@ export default function Home() {
         <h1 className="font-display text-5xl md:text-7xl font-800 leading-tight mb-6">
           Complete Tasks.<br />
           <span className="text-brand-400">Earn Points.</span><br />
-          Shop Freely.
+          Get Paid.
         </h1>
         <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto mb-10">
           Answer simple surveys, accumulate points, and redeem them for real cash.
-          <span className="text-brand-400 font-600">1 point = KSh 1.</span> It takes minutes and pays off.
+          <span className="text-brand-400 font-600">100 points = 1 USD$.</span> It takes minutes and pays off.
         </p>
         <Link href="/auth/register" className="btn-primary text-base px-8 py-3 inline-block">
-          Create Free Account →
+          Create  Account →
         </Link>
       </section>
 

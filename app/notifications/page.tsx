@@ -26,7 +26,7 @@ export default async function NotificationsPage() {
     .order('created_at', { ascending: false }).limit(20)
 
   const { data: referredUsers } = await supabase
-    .from('profiles').select('full_name, created_at').eq('referred_by', profile?.referral_code ?? '')
+    .from('profiles').select('full_name, created_at').eq('referred_by', user.id)
     .order('created_at', { ascending: false }).limit(10)
 
   // Build notifications from real data
@@ -39,7 +39,7 @@ export default async function NotificationsPage() {
         id: `w-${w.id}`,
         type: 'success',
         title: 'Withdrawal Approved ✓',
-        body: `Your withdrawal of ${w.amount_points} pts (KSh ${w.amount_points}) via ${w.payment_method} has been approved.${w.admin_note ? ` Note: ${w.admin_note}` : ''}`,
+        body: `Your withdrawal of ${w.amount_points} pts (= $${(w.amount_points / 100).toFixed(2)} USD) via ${w.payment_method} has been approved.${w.admin_note ? ` Note: ${w.admin_note}` : ''}`,
         date: w.created_at,
         icon: CheckCircle,
         color: 'text-brand-400',
@@ -73,7 +73,7 @@ export default async function NotificationsPage() {
       id: `ref-${ref.created_at}`,
       type: 'reward',
       title: 'Referral Bonus Earned! 🎉',
-      body: `${ref.full_name?.split(' ')[0] ?? 'Someone'} joined using your referral code. You earned 100 pts (KSh 100)!`,
+      body: `${ref.full_name?.split(' ')[0] ?? 'Someone'} joined using your referral code. You earned 100 pts (= $1.00 USD)!`,
       date: ref.created_at,
       icon: Gift,
       color: 'text-purple-400',

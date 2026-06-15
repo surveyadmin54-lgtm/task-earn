@@ -31,7 +31,7 @@ export default function ReferralCard({
       </div>
       <p className="text-slate-400 text-sm mb-4">
         Share your referral code. Earn{' '}
-        <span className="text-brand-400 font-700">100 points (= KSh 100)</span> for every
+        <span className="text-brand-400 font-700">100 points (= $1 USD)</span> for every
         friend who joins and gets approved!
       </p>
 

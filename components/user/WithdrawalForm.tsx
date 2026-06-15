@@ -20,7 +20,7 @@ export default function WithdrawalForm({ userId, points }: { userId: string; poi
     const pts = parseInt(amount)
     if (isNaN(pts) || pts <= 0)  { setIsError(true); setMsg('Enter a valid amount.'); return }
     if (pts > points)             { setIsError(true); setMsg('Insufficient points balance.'); return }
-    if (pts < 100)                { setIsError(true); setMsg('Minimum withdrawal is 100 points (KSh 100).'); return }
+    if (pts < 100)                { setIsError(true); setMsg('Minimum withdrawal is 100 points (= $1 USD).'); return }
     if (!details.trim())          { setIsError(true); setMsg('Enter your payment details.'); return }
 
     setLoading(true); setMsg(''); setIsError(false)
@@ -54,7 +54,7 @@ export default function WithdrawalForm({ userId, points }: { userId: string; poi
         <div>
           <label className="block text-sm text-slate-300 mb-1.5">
             Points to Withdraw
-            <span className="text-slate-500 ml-1">(min 100, you have {points} = KSh {points})</span>
+            <span className="text-slate-500 ml-1">(min 100 pts = $1 USD, you have {points} pts)</span>
           </label>
           <input
             type="number" min="100" max={points}
@@ -62,7 +62,7 @@ export default function WithdrawalForm({ userId, points }: { userId: string; poi
             placeholder="e.g. 500"
           />
           {amount && !isNaN(parseInt(amount)) && parseInt(amount) > 0 && (
-            <p className="text-xs text-brand-400 mt-1">= KSh {parseInt(amount)}</p>
+            <p className="text-xs text-brand-400 mt-1">= ${(parseInt(amount) / 100).toFixed(2)} USD</p>
           )}
         </div>
         <div>
@@ -89,7 +89,7 @@ export default function WithdrawalForm({ userId, points }: { userId: string; poi
         }
       </button>
       {points < 100 && (
-        <p className="text-slate-500 text-sm">You need at least 100 points (KSh 100) to request a withdrawal.</p>
+        <p className="text-slate-500 text-sm">You need at least 100 points ($1 USD) to request a withdrawal.</p>
       )}
     </form>
   )

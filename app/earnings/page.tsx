@@ -57,9 +57,9 @@ export default async function EarningsPage() {
         {/* Summary cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           {[
-            { label: 'Current Balance', value: `${currentPts} pts`, sub: `KSh ${currentPts}`, color: 'text-brand-400', icon: Star },
-            { label: 'Total Earned', value: `${totalEarned} pts`, sub: `KSh ${totalEarned}`, color: 'text-blue-400', icon: TrendingUp },
-            { label: 'Total Withdrawn', value: `${approvedWithdrawals} pts`, sub: `KSh ${approvedWithdrawals}`, color: 'text-purple-400', icon: ArrowDownCircle },
+            { label: 'Current Balance', value: `${currentPts} pts`, sub: `$${(currentPts / 100).toFixed(2)} USD`, color: 'text-brand-400', icon: Star },
+            { label: 'Total Earned', value: `${totalEarned} pts`, sub: `$${(totalEarned / 100).toFixed(2)} USD`, color: 'text-blue-400', icon: TrendingUp },
+            { label: 'Total Withdrawn', value: `${approvedWithdrawals} pts`, sub: `$${(approvedWithdrawals / 100).toFixed(2)} USD`, color: 'text-purple-400', icon: ArrowDownCircle },
             { label: 'Pending Payout', value: `${(withdrawals ?? []).filter((w: any) => w.status === 'pending').reduce((s: number, w: any) => s + w.amount_points, 0)} pts`, sub: 'Under review', color: 'text-yellow-400', icon: Calendar },
           ].map(({ label, value, sub, color, icon: Icon }) => (
             <div key={label} className="card p-4">

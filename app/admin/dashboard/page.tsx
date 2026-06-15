@@ -37,13 +37,13 @@ export default async function AdminDashboard() {
     { label: 'Active Surveys',      value: totalSurveys ?? 0,      icon: ClipboardList,   color: 'text-purple-400' },
     { label: 'Pending Withdrawals', value: pendingWithdrawals ?? 0, icon: ArrowDownCircle, color: 'text-yellow-400' },
     { label: 'Awaiting Approval',   value: pendingApprovals ?? 0,  icon: UserCheck,       color: 'text-orange-400' },
-    { label: 'Total Pts in Circ.', value: `${totalPoints.toLocaleString()} = KSh ${totalPoints.toLocaleString()}`, icon: Star, color: 'text-brand-400' },
+    { label: 'Total Pts in Circ.', value: `${totalPoints.toLocaleString()} = $${(totalPoints / 100).toFixed(2)} USD`, icon: Star, color: 'text-brand-400' },
   ]
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen">
       <AdminNav />
-      <main className="flex-1 p-8">
+      <main className="flex-1 w-full min-w-0 p-4 md:p-8">
         <div className="mb-8">
           <h1 className="font-display text-3xl font-700">Overview</h1>
           <p className="text-slate-400 mt-1">TaskEarn platform at a glance.</p>
@@ -91,7 +91,7 @@ export default async function AdminDashboard() {
                       <span className="flex items-center gap-1 text-brand-400">
                         <Star size={12} /> {w.amount_points} pts
                       </span>
-                      <span className="text-xs text-slate-500">= KSh {w.amount_points}</span>
+                      <span className="text-xs text-slate-500">= ${(w.amount_points / 100).toFixed(2)} USD</span>
                     </td>
                     <td className="py-3 text-slate-300">{w.payment_method}</td>
                     <td className="py-3 text-slate-400">{new Date(w.created_at).toLocaleDateString()}</td>

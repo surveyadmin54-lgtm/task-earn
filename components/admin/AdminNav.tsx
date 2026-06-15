@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ClipboardList, ArrowDownCircle, Users, LogOut, ShieldCheck, Menu, X, UserCheck, Gift } from 'lucide-react'
+import { LayoutDashboard, ClipboardList, ArrowDownCircle, Users, LogOut, ShieldCheck, Menu, X, UserCheck, Gift, Share2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
@@ -11,7 +11,8 @@ const links = [
   { href: '/admin/approvals',   label: 'Approvals',   icon: UserCheck },
   { href: '/admin/surveys',     label: 'Surveys',     icon: ClipboardList },
   { href: '/admin/withdrawals', label: 'Withdrawals', icon: ArrowDownCircle },
-  { href: '/admin/giftcards',   label: 'Gift Cards',  icon: Gift },
+  { href: '/admin/referrals',  label: 'Referrals',   icon: Share2 },
+  { href: '/admin/giftcards',  label: 'Gift Cards',  icon: Gift },
   { href: '/admin/users',       label: 'Users',       icon: Users },
 ]
 

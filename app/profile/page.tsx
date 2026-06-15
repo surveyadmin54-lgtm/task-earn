@@ -39,7 +39,7 @@ export default async function ProfilePage() {
               <div>
                 <p className="text-slate-400 text-xs">Points Balance</p>
                 <p className="font-display text-3xl font-800 text-brand-400 leading-none">{profile?.points ?? 0}</p>
-                <p className="text-xs text-slate-500 mt-0.5">= KSh {profile?.points ?? 0}</p>
+                <p className="text-xs text-slate-500 mt-0.5">= ${((profile?.points ?? 0) / 100).toFixed(2)} USD</p>
               </div>
             </div>
             <div className="text-right">
