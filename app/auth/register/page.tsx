@@ -33,6 +33,19 @@ function RegisterForm() {
     if (ref) setReferralCode(ref.toUpperCase())
   }, [searchParams])
 
+  /* 🔐 LOCK TILL WHEN LEVEL CHANGES */
+  useEffect(() => {
+    const lockTill = async () => {
+      setAssignedTill('')
+      const { data, error } = await supabase.rpc('lock_next_till', {
+        p_level: selectedLevel,
+      })
+      if (!error && data) setAssignedTill(data)
+    }
+
+    lockTill()
+  }, [selectedLevel])
+
   const selectedAmount =
     LEVELS.find((l) => l.level === selectedLevel)?.amount || 0
 
@@ -40,59 +53,29 @@ function RegisterForm() {
     e.preventDefault()
     setError('')
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.')
-      return
-    }
-
-    if (!mpesaCode.trim()) {
-      setError('Enter M-Pesa transaction code.')
+    if (!assignedTill) {
+      setError('Till not assigned. Please wait.')
       return
     }
 
     setLoading(true)
 
     try {
-      /* 1️⃣ GET TILL FIRST (SERVER-SIDE ROTATION) */
-      const { data: tillNumber, error: tillError } = await supabase
-        .rpc('get_next_till', { p_level: selectedLevel })
-
-      if (tillError || !tillNumber) {
-        throw new Error('Failed to assign till number.')
-      }
-
-      /* 2️⃣ CREATE ACCOUNT WITH TILL INCLUDED */
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName,
-            assigned_till: tillNumber,
-            payment_level: selectedLevel,
-            payment_amount: selectedAmount,
-            mpesa_code: mpesaCode,
-          },
-        },
+        options: { data: { full_name: fullName } },
       })
 
-      if (authError) throw authError
-      if (!data.user) throw new Error('Account creation failed.')
+      if (authError || !data.user) throw authError
 
-      setAssignedTill(tillNumber)
+      await supabase.from('profiles').update({
+        payment_level: selectedLevel,
+        payment_amount: selectedAmount,
+        assigned_till: assignedTill,
+        mpesa_code: mpesaCode,
+      }).eq('id', data.user.id)
 
-      /* 3️⃣ SYNC PROFILE (SAFE) */
-      await supabase
-        .from('profiles')
-        .update({
-          assigned_till: tillNumber,
-          payment_level: selectedLevel,
-          payment_amount: selectedAmount,
-          mpesa_code: mpesaCode,
-        })
-        .eq('id', data.user.id)
-
-      /* 4️⃣ APPLY REFERRAL (OPTIONAL) */
       if (referralCode) {
         await supabase.rpc('apply_referral', {
           p_new_user_id: data.user.id,
@@ -111,21 +94,11 @@ function RegisterForm() {
   if (success) {
     return (
       <main className="min-h-screen flex items-center justify-center bg-[#0f1117]">
-        <div className="w-full max-w-md rounded-xl border border-[#232840] bg-[#181c27] p-8 text-center">
-          <div className="mb-4 text-5xl">✅</div>
-
-          <h2 className="mb-2 text-2xl font-bold text-white">
-            Registration Submitted
-          </h2>
-
-          <p className="text-slate-400">
-            Pay to till <span className="text-green-500">{assignedTill}</span> and
-            wait for approval.
+        <div className="max-w-md rounded-xl bg-[#181c27] p-8 text-center">
+          <h2 className="text-2xl font-bold text-white">✅ Registered</h2>
+          <p className="text-white mt-3">
+            Pay to till <span className="text-green-500">{assignedTill}</span>
           </p>
-
-          <a href="/auth/login" className="mt-5 inline-block text-green-500">
-            Go to Login →
-          </a>
         </div>
       </main>
     )
@@ -133,99 +106,43 @@ function RegisterForm() {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#0f1117] p-4">
-      <div className="w-full max-w-md rounded-xl border border-[#232840] bg-[#181c27] p-8">
-        <h1 className="text-center text-3xl font-bold text-white">
-          Task<span className="text-green-500">Earn</span>
-        </h1>
-
-        <p className="mb-6 mt-2 text-center text-sm text-slate-400">
-          Create your account
-        </p>
-
+      <div className="max-w-md rounded-xl bg-[#181c27] p-8 w-full">
         <form onSubmit={handleRegister} className="space-y-4">
-          <input
-            required
-            placeholder="Full Name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
-          />
-
-          <input
-            type="email"
-            required
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
-          />
-
-          <input
-            type="password"
-            required
-            placeholder="Password (min 8 chars)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
-          />
 
           <select
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(Number(e.target.value))}
-            className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
+            className="w-full rounded bg-black text-white p-3"
           >
             {LEVELS.map((l) => (
               <option key={l.level} value={l.level}>
-                Level {l.level} — KES {l.amount.toLocaleString()}
+                Level {l.level} — KES {l.amount}
               </option>
             ))}
           </select>
 
-          <div className="rounded-lg border border-green-500 p-4">
-            <p className="font-bold text-green-500">
-              Pay KES {selectedAmount.toLocaleString()}
-            </p>
-            <p className="text-white mt-1">
-              Till will be assigned during signup
-            </p>
+          <div className="border border-green-500 rounded p-3">
+            {assignedTill ? (
+              <p className="text-white">
+                Pay to till <span className="text-green-500">{assignedTill}</span>
+              </p>
+            ) : (
+              <p className="text-slate-400">Assigning till…</p>
+            )}
           </div>
 
-          <input
-            required
-            placeholder="M-Pesa Transaction Code"
-            value={mpesaCode}
-            onChange={(e) => setMpesaCode(e.target.value.toUpperCase())}
-            className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
-          />
+          <input required placeholder="Full Name" onChange={(e) => setFullName(e.target.value)} />
+          <input required type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
+          <input required type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+          <input required placeholder="M-Pesa Code" onChange={(e) => setMpesaCode(e.target.value)} />
 
-          <input
-            placeholder="Referral Code (optional)"
-            value={referralCode}
-            maxLength={8}
-            onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-            className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-green-500"
-          />
+          {error && <p className="text-red-500">{error}</p>}
 
-          {error && (
-            <div className="rounded-lg border border-red-900 bg-red-950 p-3 text-sm text-red-300">
-              {error}
-            </div>
-          )}
-
-          <button
-            disabled={loading}
-            className="w-full rounded-lg bg-green-500 py-3 font-semibold text-white"
-          >
-            {loading ? 'Creating Account...' : 'Create Account'}
+          <button disabled={loading} className="bg-green-500 w-full p-3 text-white">
+            {loading ? 'Processing…' : 'Create Account'}
           </button>
-        </form>
 
-        <p className="mt-5 text-center text-sm text-slate-500">
-          Already have an account?{' '}
-          <a href="/auth/login" className="text-green-500">
-            Sign In
-          </a>
-        </p>
+        </form>
       </div>
     </main>
   )
