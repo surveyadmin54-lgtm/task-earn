@@ -53,21 +53,7 @@ function RegisterForm() {
     setLoading(true)
 
     try {
-      /* 1️⃣ Create account */
-      const { data, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      })
-
-      if (authError) throw authError
-      if (!data.user) throw new Error('Account creation failed.')
-
-      /* 2️⃣ Get server-side rotated till */
+      /* 1️⃣ GET TILL FIRST (SERVER-SIDE ROTATION) */
       const { data: tillNumber, error: tillError } = await supabase
         .rpc('get_next_till', { p_level: selectedLevel })
 
@@ -75,20 +61,38 @@ function RegisterForm() {
         throw new Error('Failed to assign till number.')
       }
 
+      /* 2️⃣ CREATE ACCOUNT WITH TILL INCLUDED */
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            assigned_till: tillNumber,
+            payment_level: selectedLevel,
+            payment_amount: selectedAmount,
+            mpesa_code: mpesaCode,
+          },
+        },
+      })
+
+      if (authError) throw authError
+      if (!data.user) throw new Error('Account creation failed.')
+
       setAssignedTill(tillNumber)
 
-      /* 3️⃣ Save payment info */
+      /* 3️⃣ SYNC PROFILE (SAFE) */
       await supabase
         .from('profiles')
         .update({
+          assigned_till: tillNumber,
           payment_level: selectedLevel,
           payment_amount: selectedAmount,
-          assigned_till: tillNumber,
           mpesa_code: mpesaCode,
         })
         .eq('id', data.user.id)
 
-      /* 4️⃣ Apply referral (optional) */
+      /* 4️⃣ APPLY REFERRAL (OPTIONAL) */
       if (referralCode) {
         await supabase.rpc('apply_referral', {
           p_new_user_id: data.user.id,
@@ -182,7 +186,7 @@ function RegisterForm() {
               Pay KES {selectedAmount.toLocaleString()}
             </p>
             <p className="text-white mt-1">
-              Till will be assigned after signup
+              Till will be assigned during signup
             </p>
           </div>
 
