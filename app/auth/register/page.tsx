@@ -14,60 +14,95 @@ const LEVELS = [
 ]
 
 function RegisterForm() {
-  const searchParams = useSearchParams()
   const supabase = createClient()
+  const searchParams = useSearchParams()
 
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [referralCode, setReferralCode] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(1)
-  const [mpesaCode, setMpesaCode] = useState('')
   const [assignedTill, setAssignedTill] = useState('')
+  const [mpesaCode, setMpesaCode] = useState('')
+  const [loadingTill, setLoadingTill] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+
+  const selectedAmount =
+    LEVELS.find((l) => l.level === selectedLevel)?.amount || 0
 
   useEffect(() => {
     const ref = searchParams.get('ref')
     if (ref) setReferralCode(ref.toUpperCase())
   }, [searchParams])
 
-  const selectedAmount =
-    LEVELS.find((l) => l.level === selectedLevel)?.amount || 0
+  /* 🔥 FETCH TILL AS SOON AS LEVEL CHANGES */
+  useEffect(() => {
+    const fetchTill = async () => {
+      setLoadingTill(true)
+      setAssignedTill('')
+      setError('')
+
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/assign-till`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+            },
+            body: JSON.stringify({ level: selectedLevel }),
+          }
+        )
+
+        const data = await res.json()
+
+        if (!data.till) throw new Error('Failed to assign till')
+
+        setAssignedTill(data.till)
+      } catch (err: any) {
+        setError(err.message)
+      }
+
+      setLoadingTill(false)
+    }
+
+    fetchTill()
+  }, [selectedLevel])
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (!assignedTill) {
+      setError('Till not assigned yet.')
+      return
+    }
+
+    if (!mpesaCode.trim()) {
+      setError('Enter M-Pesa transaction code.')
+      return
+    }
+
     setLoading(true)
 
     try {
-      // 1️⃣ Signup
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName } },
+        options: {
+          data: { full_name: fullName },
+        },
       })
 
       if (authError || !data.user) throw authError
 
-      // 2️⃣ Assign till immediately
-      const { data: till, error: tillError } = await supabase.rpc(
-        'get_next_till',
-        { p_level: selectedLevel }
-      )
-
-      if (tillError || !till) {
-        throw new Error('Could not assign till')
-      }
-
-      setAssignedTill(till)
-
-      // 3️⃣ Save profile
       await supabase.from('profiles').update({
         payment_level: selectedLevel,
         payment_amount: selectedAmount,
-        assigned_till: till,
+        assigned_till: assignedTill,
         mpesa_code: mpesaCode,
       }).eq('id', data.user.id)
 
@@ -88,51 +123,68 @@ function RegisterForm() {
 
   if (success) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[#0f1117]">
-        <div className="bg-[#181c27] p-8 rounded text-center">
-          <h2 className="text-2xl font-bold text-white">✅ Registered</h2>
-          <p className="text-white mt-3">
-            Pay to till <span className="text-green-500">{assignedTill}</span>
-          </p>
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="p-8 border rounded">
+          <h2 className="text-2xl font-bold mb-2">✅ Registered</h2>
+          <p>Paid Till: <span className="text-green-500">{assignedTill}</span></p>
+          <a href="/auth/login" className="text-green-500 mt-4 inline-block">
+            Go to Login →
+          </a>
         </div>
-      </main>
+      </div>
     )
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#0f1117] p-4">
-      <div className="bg-[#181c27] p-8 rounded w-full max-w-md">
-        <form onSubmit={handleRegister} className="space-y-4">
+    <main className="min-h-screen flex items-center justify-center bg-black p-4">
+      <form onSubmit={handleRegister} className="w-full max-w-md space-y-4 text-white">
+        <input required placeholder="Full Name" onChange={e => setFullName(e.target.value)} />
+        <input required type="email" placeholder="Email" onChange={e => setEmail(e.target.value)} />
+        <input required type="password" placeholder="Password" onChange={e => setPassword(e.target.value)} />
 
-          <input required placeholder="Full Name" onChange={(e) => setFullName(e.target.value)} />
-          <input required type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
-          <input required type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} />
+        <select value={selectedLevel} onChange={e => setSelectedLevel(Number(e.target.value))}>
+          {LEVELS.map(l => (
+            <option key={l.level} value={l.level}>
+              Level {l.level} — KES {l.amount}
+            </option>
+          ))}
+        </select>
 
-          <select value={selectedLevel} onChange={(e) => setSelectedLevel(Number(e.target.value))}>
-            {LEVELS.map(l => (
-              <option key={l.level} value={l.level}>
-                Level {l.level} — KES {l.amount}
-              </option>
-            ))}
-          </select>
+        <div className="border p-4 rounded">
+          <p>Amount: <b>KES {selectedAmount}</b></p>
+          <p>
+            Till:{' '}
+            {loadingTill ? (
+              <span className="text-yellow-400">Assigning…</span>
+            ) : (
+              <span className="text-green-500 font-bold">{assignedTill}</span>
+            )}
+          </p>
+        </div>
 
-          <input required placeholder="M-Pesa Code" onChange={(e) => setMpesaCode(e.target.value)} />
+        <input
+          required
+          placeholder="M-Pesa Transaction Code"
+          value={mpesaCode}
+          onChange={e => setMpesaCode(e.target.value.toUpperCase())}
+        />
 
-          {error && <p className="text-red-500">{error}</p>}
+        {error && <p className="text-red-500">{error}</p>}
 
-          <button disabled={loading} className="bg-green-500 w-full p-3 text-white">
-            {loading ? 'Creating account…' : 'Create Account'}
-          </button>
-
-        </form>
-      </div>
+        <button
+          disabled={loading || loadingTill}
+          className="bg-green-500 text-black w-full py-2"
+        >
+          {loading ? 'Creating account…' : 'Create Account'}
+        </button>
+      </form>
     </main>
   )
 }
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div className="text-white">Loading...</div>}>
+    <Suspense fallback={<div>Loading…</div>}>
       <RegisterForm />
     </Suspense>
   )
