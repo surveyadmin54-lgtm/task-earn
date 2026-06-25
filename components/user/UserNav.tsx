@@ -10,7 +10,6 @@ const links = [
   { href: '/dashboard',   label: 'Dashboard',   icon: LayoutDashboard },
   { href: '/tasks',       label: 'Tasks',        icon: ClipboardList },
   { href: '/earnings',    label: 'Earnings',     icon: Zap },
-  { href: '/leaderboard', label: 'Leaderboard',  icon: Trophy },
   { href: '/notifications', label: 'Updates',    icon: Bell },
   { href: '/profile',     label: 'Profile',      icon: User },
 ]

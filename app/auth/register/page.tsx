@@ -13,27 +13,9 @@ const LEVELS = [
   { level: 6, amount: 30000 },
 ]
 
-const getTillNumber = (level: number) => {
-  switch (level) {
-    case 1:
-      return '111111'
-    case 2:
-      return '222222'
-    case 3:
-      return '333333'
-    case 4:
-      return '444444'
-    case 5:
-      return '555555'
-    case 6:
-      return '666666'
-    default:
-      return '111111'
-  }
-}
-
 function RegisterForm() {
   const searchParams = useSearchParams()
+  const supabase = createClient()
 
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
@@ -41,11 +23,10 @@ function RegisterForm() {
   const [referralCode, setReferralCode] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(1)
   const [mpesaCode, setMpesaCode] = useState('')
+  const [assignedTill, setAssignedTill] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-
-  const tillNumber = getTillNumber(selectedLevel)
 
   useEffect(() => {
     const ref = searchParams.get('ref')
@@ -57,7 +38,6 @@ function RegisterForm() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-
     setError('')
 
     if (password.length < 8) {
@@ -73,8 +53,7 @@ function RegisterForm() {
     setLoading(true)
 
     try {
-      const supabase = createClient()
-
+      /* 1️⃣ Create account */
       const { data, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -86,21 +65,30 @@ function RegisterForm() {
       })
 
       if (authError) throw authError
+      if (!data.user) throw new Error('Account creation failed.')
 
-      if (!data.user) {
-        throw new Error('Failed to create account.')
+      /* 2️⃣ Get server-side rotated till */
+      const { data: tillNumber, error: tillError } = await supabase
+        .rpc('get_next_till', { p_level: selectedLevel })
+
+      if (tillError || !tillNumber) {
+        throw new Error('Failed to assign till number.')
       }
 
+      setAssignedTill(tillNumber)
+
+      /* 3️⃣ Save payment info */
       await supabase
         .from('profiles')
         .update({
           payment_level: selectedLevel,
           payment_amount: selectedAmount,
           assigned_till: tillNumber,
-           mpesa_code: mpesaCode,
+          mpesa_code: mpesaCode,
         })
         .eq('id', data.user.id)
 
+      /* 4️⃣ Apply referral (optional) */
       if (referralCode) {
         await supabase.rpc('apply_referral', {
           p_new_user_id: data.user.id,
@@ -127,13 +115,11 @@ function RegisterForm() {
           </h2>
 
           <p className="text-slate-400">
-            Check your email and wait for payment approval.
+            Pay to till <span className="text-green-500">{assignedTill}</span> and
+            wait for approval.
           </p>
 
-          <a
-            href="/auth/login"
-            className="mt-5 inline-block text-green-500"
-          >
+          <a href="/auth/login" className="mt-5 inline-block text-green-500">
             Go to Login →
           </a>
         </div>
@@ -154,29 +140,28 @@ function RegisterForm() {
 
         <form onSubmit={handleRegister} className="space-y-4">
           <input
-            type="text"
             required
+            placeholder="Full Name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="Full Name"
             className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
           />
 
           <input
             type="email"
             required
+            placeholder="Email Address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email Address"
             className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
           />
 
           <input
             type="password"
             required
+            placeholder="Password (min 8 chars)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
             className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
           />
 
@@ -185,9 +170,9 @@ function RegisterForm() {
             onChange={(e) => setSelectedLevel(Number(e.target.value))}
             className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
           >
-            {LEVELS.map((level) => (
-              <option key={level.level} value={level.level}>
-                Level {level.level} - KES {level.amount.toLocaleString()}
+            {LEVELS.map((l) => (
+              <option key={l.level} value={l.level}>
+                Level {l.level} — KES {l.amount.toLocaleString()}
               </option>
             ))}
           </select>
@@ -196,27 +181,24 @@ function RegisterForm() {
             <p className="font-bold text-green-500">
               Pay KES {selectedAmount.toLocaleString()}
             </p>
-
-            <p className="mt-2 text-white">
-              Till Number: {tillNumber}
+            <p className="text-white mt-1">
+              Till will be assigned after signup
             </p>
           </div>
 
           <input
-            type="text"
             required
+            placeholder="M-Pesa Transaction Code"
             value={mpesaCode}
             onChange={(e) => setMpesaCode(e.target.value.toUpperCase())}
-            placeholder="M-Pesa Transaction Code"
             className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
           />
 
           <input
-            type="text"
+            placeholder="Referral Code (optional)"
             value={referralCode}
-            onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
-            placeholder="Referral Code (Optional)"
             maxLength={8}
+            onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
             className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-green-500"
           />
 
@@ -227,7 +209,6 @@ function RegisterForm() {
           )}
 
           <button
-            type="submit"
             disabled={loading}
             className="w-full rounded-lg bg-green-500 py-3 font-semibold text-white"
           >
@@ -248,7 +229,7 @@ function RegisterForm() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="text-white">Loading...</div>}>
       <RegisterForm />
     </Suspense>
   )
