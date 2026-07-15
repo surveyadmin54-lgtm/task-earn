@@ -13,6 +13,12 @@ const LEVELS = [
   { level: 6, amount: 30000 },
 ]
 
+const TILLS = ['3500892 -mary', '3500824 -esther',]
+
+function getRandomTill() {
+  return TILLS[Math.floor(Math.random() * TILLS.length)]
+}
+
 function RegisterForm() {
   const searchParams = useSearchParams()
 
@@ -22,27 +28,24 @@ function RegisterForm() {
   const [referralCode, setReferralCode] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(1)
   const [mpesaCode, setMpesaCode] = useState('')
+  const [assignedTill, setAssignedTill] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const [assignedTill, setAssignedTill] = useState('')
-  const [paymentAmount, setPaymentAmount] = useState(0)
+
+  const selectedAmount =
+    LEVELS.find((l) => l.level === selectedLevel)?.amount || 0
 
   useEffect(() => {
     const ref = searchParams.get('ref')
     if (ref) setReferralCode(ref.toUpperCase())
+    setAssignedTill(getRandomTill())
   }, [searchParams])
 
-  useEffect(() => {
-    const amount = LEVELS.find((l) => l.level === selectedLevel)?.amount || 0
-    setPaymentAmount(amount)
-  }, [selectedLevel])
-
-  useEffect(() => {
-    const tills = ['111111', '222222', '333333', '444444', '555555']
-    const randomTill = tills[Math.floor(Math.random() * tills.length)]
-    setAssignedTill(randomTill)
-  }, [])
+  const handleChangeLevel = (level: number) => {
+    setSelectedLevel(level)
+    setAssignedTill(getRandomTill())
+  }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,7 +62,7 @@ function RegisterForm() {
     }
 
     if (!assignedTill) {
-      setError('Till number not assigned. Please refresh and try again.')
+      setError('Till number not ready. Please refresh and try again.')
       return
     }
 
@@ -86,7 +89,7 @@ function RegisterForm() {
         email,
         full_name: fullName,
         payment_level: selectedLevel,
-        payment_amount: paymentAmount,
+        payment_amount: selectedAmount,
         assigned_till: assignedTill,
         mpesa_code: mpesaCode,
         referral_code: referralCode || null,
@@ -99,7 +102,6 @@ function RegisterForm() {
           p_new_user_id: data.user.id,
           p_referral_code: referralCode,
         })
-
         if (referralError) throw referralError
       }
 
@@ -174,7 +176,7 @@ function RegisterForm() {
 
           <select
             value={selectedLevel}
-            onChange={(e) => setSelectedLevel(Number(e.target.value))}
+            onChange={(e) => handleChangeLevel(Number(e.target.value))}
             className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
           >
             {LEVELS.map((level) => (
@@ -186,9 +188,11 @@ function RegisterForm() {
 
           <div className="rounded-lg border border-green-500 p-4">
             <p className="font-bold text-green-500">
-              Pay KES {paymentAmount.toLocaleString()}
+              Pay KES {selectedAmount.toLocaleString()}
             </p>
-            <p className="mt-2 text-white">Till Number: {assignedTill || 'Loading...'}</p>
+            <p className="mt-2 text-white">
+              Till Number: {assignedTill || 'Loading...'}
+            </p>
           </div>
 
           <input
