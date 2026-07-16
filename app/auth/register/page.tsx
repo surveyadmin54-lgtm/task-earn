@@ -5,12 +5,12 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 const LEVELS = [
-  { level: 1, amount: 800 },
-  { level: 2, amount: 2000 },
-  { level: 3, amount: 5000 },
-  { level: 4, amount: 10000 },
-  { level: 5, amount: 15000 },
-  { level: 6, amount: 30000 },
+  { level: 1, amount: 200 },
+  { level: 2, amount: 800 },
+  { level: 3, amount: 2000 },
+  { level: 4, amount: 5000 },
+  { level: 5, amount: 10000 },
+  { level: 6, amount: 12000 },
 ]
 
 const TILLS = ['3500892 -mary', '3500824 -esther',]

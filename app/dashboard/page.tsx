@@ -4,9 +4,8 @@ import UserNav from '@/components/user/UserNav'
 import CheckInButton from '@/components/user/CheckInButton'
 import ReferralCard from '@/components/user/ReferralCard'
 import Link from 'next/link'
-import { Star, ClipboardList, ArrowDownCircle, TrendingUp, Users, Zap, ChevronRight } from 'lucide-react'
+import { Star, ClipboardList, ArrowDownCircle, TrendingUp, Users, ChevronRight, Lock } from 'lucide-react'
 
-// Real WhatsApp SVG icon
 function WhatsAppIcon({ size = 20 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -43,16 +42,19 @@ export default async function DashboardPage() {
   const todayEAT = new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().split('T')[0]
   const alreadyCheckedIn = profile?.last_checkin === todayEAT
 
+  const userLevel = profile?.level ?? 1
+  const canCheckIn = userLevel >= 2  // Level 1 users cannot claim daily check-in
+
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://yourdomain.com'
   const referralLink = `${siteUrl}/auth/register?ref=${profile?.referral_code ?? ''}`
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '254700000000'
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=Hi%20TaskEarn%20Support%2C%20I%20need%20help%20with%20my%20account.`
 
   const stats = [
-    { label: 'Points Balance', value: profile?.points ?? 0, icon: Star, color: 'text-brand-400', bg: 'bg-brand-500/10', sub: `$${((profile?.points ?? 0) / 100).toFixed(2)} USD` },
-    { label: 'Tasks Completed', value: completedSurveys?.length ?? 0, icon: ClipboardList, color: 'text-blue-400', bg: 'bg-blue-500/10', sub: 'All time' },
-    { label: 'Referrals', value: referrals?.length ?? 0, icon: Users, color: 'text-purple-400', bg: 'bg-purple-500/10', sub: `+${(referrals?.length ?? 0) * 100} pts earned` },
-    { label: 'Pending Withdrawals', value: withdrawals?.filter((w: any) => w.status === 'pending').length ?? 0, icon: ArrowDownCircle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', sub: 'Awaiting review' },
+    { label: 'Points Balance',      value: profile?.points ?? 0,                                                   icon: Star,           color: 'text-brand-400',  bg: 'bg-brand-500/10',  sub: `KSh ${profile?.points ?? 0}` },
+    { label: 'Tasks Completed',     value: completedSurveys?.length ?? 0,                                          icon: ClipboardList,  color: 'text-blue-400',   bg: 'bg-blue-500/10',   sub: 'All time' },
+    { label: 'Referrals',           value: referrals?.length ?? 0,                                                 icon: Users,          color: 'text-purple-400', bg: 'bg-purple-500/10', sub: `+${(referrals?.length ?? 0) * 100} pts earned` },
+    { label: 'Pending Withdrawals', value: withdrawals?.filter((w: any) => w.status === 'pending').length ?? 0,    icon: ArrowDownCircle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', sub: 'Awaiting review' },
   ]
 
   return (
@@ -68,7 +70,16 @@ export default async function DashboardPage() {
             </h1>
             <p className="text-slate-400 mt-1 text-sm">Here is your activity overview.</p>
           </div>
-          <CheckInButton userId={user.id} alreadyCheckedIn={alreadyCheckedIn} />
+
+          {/* Daily check-in — Level 2+ only */}
+          {canCheckIn ? (
+            <CheckInButton userId={user.id} alreadyCheckedIn={alreadyCheckedIn} />
+          ) : (
+            <div className="flex items-center gap-2 bg-slate-800/60 border border-slate-700/50 rounded-xl px-4 py-2.5 text-slate-500 text-xs">
+              <Lock size={13} />
+              Daily check-in unlocks at Level 2
+            </div>
+          )}
         </div>
 
         {/* Stats Grid */}
@@ -87,13 +98,10 @@ export default async function DashboardPage() {
           ))}
         </div>
 
-       
-
         {/* 2-col row: Referral + WhatsApp */}
         <div className="grid md:grid-cols-2 gap-4 mb-6">
           <ReferralCard referralCode={profile?.referral_code ?? ''} referralLink={referralLink} />
 
-          {/* WhatsApp support — real icon */}
           <div className="card flex flex-col justify-between p-5">
             <div>
               <div className="flex items-center gap-3 mb-3">
@@ -150,6 +158,7 @@ export default async function DashboardPage() {
             <p className="text-slate-500 text-sm">No activity yet. Complete your first task to earn points!</p>
           )}
         </div>
+
       </main>
     </div>
   )
