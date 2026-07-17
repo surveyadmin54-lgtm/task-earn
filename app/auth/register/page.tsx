@@ -13,7 +13,7 @@ const LEVELS = [
   { level: 6, amount: 12000 },
 ]
 
-const TILLS = ['3500892 -mary', '3500824 -esther',]
+const TILLS = ['3500892 -mary', '3500824 -esther']
 
 function getRandomTill() {
   return TILLS[Math.floor(Math.random() * TILLS.length)]
@@ -25,6 +25,9 @@ function RegisterForm() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [referralCode, setReferralCode] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(1)
   const [mpesaCode, setMpesaCode] = useState('')
@@ -53,6 +56,11 @@ function RegisterForm() {
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters.')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
       return
     }
 
@@ -93,6 +101,7 @@ function RegisterForm() {
         assigned_till: assignedTill,
         mpesa_code: mpesaCode,
         referral_code: referralCode || null,
+        approved: false,
       })
 
       if (profileError) throw profileError
@@ -122,7 +131,7 @@ function RegisterForm() {
             Registration Submitted
           </h2>
           <p className="text-slate-400">
-            Check your email and wait for payment approval.
+            Your account has been created. Wait for admin approval before full access.
           </p>
           <p className="mt-4 text-green-500 font-semibold">
             Assigned Till: {assignedTill}
@@ -165,14 +174,43 @@ function RegisterForm() {
             className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
           />
 
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
-          />
+          <div className="space-y-2">
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 pr-24 text-white"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-green-500"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm Password"
+                className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 pr-24 text-white"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-green-500"
+              >
+                {showConfirmPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+          </div>
 
           <select
             value={selectedLevel}
