@@ -4,51 +4,38 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
-const LEVELS = [
-  { level: 1, amount: 200 },
-  { level: 2, amount: 800 },
-  { level: 3, amount: 2000 },
-  { level: 4, amount: 5000 },
-  { level: 5, amount: 10000 },
-  { level: 6, amount: 12000 },
+const COUNTRIES = [
+  'Kenya',
+  'Uganda',
+  'Tanzania',
+  'Rwanda',
+  'Nigeria',
+  'South Africa',
+  'Ghana',
+  'United States',
+  'United Kingdom',
+  'Other',
 ]
-
-const TILLS = ['3500892 -mary', '3500824 -esther']
-
-function getRandomTill() {
-  return TILLS[Math.floor(Math.random() * TILLS.length)]
-}
 
 function RegisterForm() {
   const searchParams = useSearchParams()
 
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
+  const [country, setCountry] = useState('Kenya')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [referralCode, setReferralCode] = useState('')
-  const [selectedLevel, setSelectedLevel] = useState(1)
-  const [mpesaCode, setMpesaCode] = useState('')
-  const [assignedTill, setAssignedTill] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const selectedAmount =
-    LEVELS.find((l) => l.level === selectedLevel)?.amount || 0
-
   useEffect(() => {
     const ref = searchParams.get('ref')
     if (ref) setReferralCode(ref.toUpperCase())
-    setAssignedTill(getRandomTill())
   }, [searchParams])
-
-  const handleChangeLevel = (level: number) => {
-    setSelectedLevel(level)
-    setAssignedTill(getRandomTill())
-  }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,16 +51,6 @@ function RegisterForm() {
       return
     }
 
-    if (!mpesaCode.trim()) {
-      setError('Enter M-Pesa transaction code.')
-      return
-    }
-
-    if (!assignedTill) {
-      setError('Till number not ready. Please refresh and try again.')
-      return
-    }
-
     setLoading(true)
 
     try {
@@ -85,6 +62,7 @@ function RegisterForm() {
         options: {
           data: {
             full_name: fullName,
+            country,
           },
         },
       })
@@ -96,12 +74,13 @@ function RegisterForm() {
         id: data.user.id,
         email,
         full_name: fullName,
-        payment_level: selectedLevel,
-        payment_amount: selectedAmount,
-        assigned_till: assignedTill,
-        mpesa_code: mpesaCode,
+        country,
+        payment_level: 0,
+        payment_amount: 0,
         referral_code: referralCode || null,
         approved: false,
+        status: 'pending',
+        role: 'user',
       })
 
       if (profileError) throw profileError
@@ -117,9 +96,9 @@ function RegisterForm() {
       setSuccess(true)
     } catch (err: any) {
       setError(err.message || 'Registration failed.')
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   if (success) {
@@ -132,9 +111,6 @@ function RegisterForm() {
           </h2>
           <p className="text-slate-400">
             Your account has been created. Wait for admin approval before full access.
-          </p>
-          <p className="mt-4 text-green-500 font-semibold">
-            Assigned Till: {assignedTill}
           </p>
           <a href="/auth/login" className="mt-5 inline-block text-green-500">
             Go to Login →
@@ -152,7 +128,7 @@ function RegisterForm() {
         </h1>
 
         <p className="mb-6 mt-2 text-center text-sm text-slate-400">
-          Create your account
+          Create your account. Registration is free.
         </p>
 
         <form onSubmit={handleRegister} className="space-y-4">
@@ -173,6 +149,19 @@ function RegisterForm() {
             placeholder="Email Address"
             className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
           />
+
+          <select
+            required
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
+          >
+            {COUNTRIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
 
           <div className="space-y-2">
             <div className="relative">
@@ -212,36 +201,6 @@ function RegisterForm() {
             </div>
           </div>
 
-          <select
-            value={selectedLevel}
-            onChange={(e) => handleChangeLevel(Number(e.target.value))}
-            className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
-          >
-            {LEVELS.map((level) => (
-              <option key={level.level} value={level.level}>
-                Level {level.level} - KES {level.amount.toLocaleString()}
-              </option>
-            ))}
-          </select>
-
-          <div className="rounded-lg border border-green-500 p-4">
-            <p className="font-bold text-green-500">
-              Pay KES {selectedAmount.toLocaleString()}
-            </p>
-            <p className="mt-2 text-white">
-              Till Number: {assignedTill || 'Loading...'}
-            </p>
-          </div>
-
-          <input
-            type="text"
-            required
-            value={mpesaCode}
-            onChange={(e) => setMpesaCode(e.target.value.toUpperCase())}
-            placeholder="M-Pesa Transaction Code"
-            className="w-full rounded-lg border border-[#232840] bg-[#0f1117] px-4 py-3 text-white"
-          />
-
           <input
             type="text"
             value={referralCode}
@@ -262,7 +221,7 @@ function RegisterForm() {
             disabled={loading}
             className="w-full rounded-lg bg-green-500 py-3 font-semibold text-white disabled:opacity-70"
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading ? 'Creating Account...' : 'Create Free Account'}
           </button>
         </form>
 

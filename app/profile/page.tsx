@@ -6,20 +6,35 @@ import WithdrawalForm from '@/components/user/WithdrawalForm'
 import GiftCardRedeem from '@/components/user/GiftCardRedeem'
 import { User, ArrowDownCircle, Gift, Star, Shield } from 'lucide-react'
 
+const POINTS_PER_USD = 100
+
+function pointsToUsd(points: number) {
+  return (points / POINTS_PER_USD).toFixed(2)
+}
+
 export default async function ProfilePage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
   const { data: profile } = await supabase
-    .from('profiles').select('*').eq('id', user.id).single()
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
   if (profile?.status === 'suspended') redirect('/auth/login')
   if (!profile?.approved) redirect('/pending')
   if (profile?.role === 'admin') redirect('/admin/dashboard')
 
   const { data: withdrawals } = await supabase
-    .from('withdrawals').select('*').eq('user_id', user.id)
+    .from('withdrawals')
+    .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
+
+  const points = profile?.points ?? 0
+  const usdBalance = pointsToUsd(points)
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
@@ -29,7 +44,6 @@ export default async function ProfilePage() {
           <User className="text-brand-400" size={26} /> Profile
         </h1>
 
-        {/* Balance + level — compact on mobile */}
         <div className="card mb-4 p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -37,9 +51,13 @@ export default async function ProfilePage() {
                 <Star size={22} className="text-brand-400" />
               </div>
               <div>
-                <p className="text-slate-400 text-xs">Points Balance</p>
-                <p className="font-display text-3xl font-800 text-brand-400 leading-none">{profile?.points ?? 0}</p>
-                <p className="text-xs text-slate-500 mt-0.5">= ${((profile?.points ?? 0) / 100).toFixed(2)} USD</p>
+                <p className="text-slate-400 text-xs">Balance</p>
+                <p className="font-display text-3xl font-800 text-brand-400 leading-none">
+                  ${usdBalance}
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {points} points = ${usdBalance} USD
+                </p>
               </div>
             </div>
             <div className="text-right">
@@ -52,12 +70,18 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        {/* Account status */}
         <div className="card mb-4 p-4 flex items-center gap-3">
           <Shield size={18} className={profile?.status === 'active' ? 'text-brand-400' : 'text-red-400'} />
           <div>
-            <p className="text-sm font-600">Account Status: <span className={profile?.status === 'active' ? 'text-brand-400' : 'text-red-400'}>{profile?.status}</span></p>
-            <p className="text-xs text-slate-500">Member since {new Date(profile?.created_at ?? '').toLocaleDateString()}</p>
+            <p className="text-sm font-600">
+              Account Status:{' '}
+              <span className={profile?.status === 'active' ? 'text-brand-400' : 'text-red-400'}>
+                {profile?.status}
+              </span>
+            </p>
+            <p className="text-xs text-slate-500">
+              Member since {new Date(profile?.created_at ?? '').toLocaleDateString()}
+            </p>
           </div>
           <div className="ml-auto">
             <a href="/auth/forgot-password" className="text-xs text-brand-400 hover:text-brand-300">
@@ -66,31 +90,31 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        {/* Profile form */}
         <div className="card mb-4 p-4 md:p-6">
           <h2 className="font-display text-base font-700 mb-4">Personal Information</h2>
           <ProfileForm profile={profile} />
         </div>
 
-        {/* Gift card */}
         <div className="card mb-4 p-4 md:p-6">
           <h2 className="font-display text-base font-700 mb-1 flex items-center gap-2">
             <Gift size={18} className="text-brand-400" /> Redeem Gift Card
           </h2>
-          <p className="text-slate-400 text-sm mb-4">Have a gift card code? Enter it here to add points instantly.</p>
+          <p className="text-slate-400 text-sm mb-4">
+            Have a gift card code? Enter it here to add USD value instantly.
+          </p>
           <GiftCardRedeem userId={user.id} />
         </div>
 
-        {/* Withdrawal request */}
         <div className="card mb-4 p-4 md:p-6">
           <h2 className="font-display text-base font-700 mb-1 flex items-center gap-2">
             <ArrowDownCircle size={18} className="text-brand-400" /> Request Withdrawal
           </h2>
-          <p className="text-slate-400 text-sm mb-4">Reviewed by admins and processed within 24–48 hours.</p>
-          <WithdrawalForm userId={user.id} points={profile?.points ?? 0} />
+          <p className="text-slate-400 text-sm mb-4">
+            Reviewed by admins and processed within 24–48 hours.
+          </p>
+          <WithdrawalForm userId={user.id} points={points} />
         </div>
 
-        {/* Withdrawal history */}
         {withdrawals && withdrawals.length > 0 && (
           <div className="card p-4 md:p-6">
             <h2 className="font-display text-base font-700 mb-4">Withdrawal History</h2>
@@ -98,7 +122,9 @@ export default async function ProfilePage() {
               {withdrawals.map((w: any) => (
                 <div key={w.id} className="flex items-start justify-between py-2.5 border-b border-surface-border last:border-0 gap-2">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm">{w.amount_points} pts → {w.payment_method}</p>
+                    <p className="text-sm">
+                      ${pointsToUsd(w.amount_points)} USD → {w.payment_method}
+                    </p>
                     <p className="text-xs text-slate-500 mt-0.5 truncate">
                       {new Date(w.created_at).toLocaleDateString()} · {w.payment_details}
                     </p>

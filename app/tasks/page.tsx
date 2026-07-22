@@ -4,13 +4,23 @@ import UserNav from '@/components/user/UserNav'
 import SurveyCard from '@/components/user/SurveyCard'
 import { ClipboardList, Clock, Lock, CheckCircle2 } from 'lucide-react'
 
+const POINTS_PER_USD = 100
+
+function pointsToUsd(points: number) {
+  return (points / POINTS_PER_USD).toFixed(2)
+}
+
 export default async function TasksPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
   const { data: profile } = await supabase
-    .from('profiles').select('role, status, approved, level').eq('id', user.id).single()
+    .from('profiles')
+    .select('role, status, approved, level')
+    .eq('id', user.id)
+    .single()
+
   if (profile?.status === 'suspended') redirect('/auth/login')
   if (!profile?.approved) redirect('/pending')
   if (profile?.role === 'admin') redirect('/admin/dashboard')
@@ -24,8 +34,9 @@ export default async function TasksPage() {
   const lastMidnightEAT = new Date(midnightEAT.getTime() - 24 * 60 * 60 * 1000)
   const lastMidnightUTC = new Date(lastMidnightEAT.getTime() - 3 * 60 * 60 * 1000).toISOString()
 
-  const hoursLeft = Math.floor((midnightEAT.getTime() - nowEAT.getTime()) / (1000 * 60 * 60))
-  const minsLeft  = Math.floor(((midnightEAT.getTime() - nowEAT.getTime()) % (1000 * 60 * 60)) / (1000 * 60))
+  const diffMs = midnightEAT.getTime() - nowEAT.getTime()
+  const hoursLeft = Math.floor(diffMs / (1000 * 60 * 60))
+  const minsLeft = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
 
   const { data: allSurveys } = await supabase
     .from('surveys')
@@ -50,9 +61,14 @@ export default async function TasksPage() {
     .in('survey_id', surveyIds.length > 0 ? surveyIds : ['none'])
 
   const completedMap = new Map<string, boolean>()
+
   for (const survey of surveys) {
     const responses = (allCompleted ?? []).filter(r => r.survey_id === survey.id)
-    if (responses.length === 0) { completedMap.set(survey.id, false); continue }
+    if (responses.length === 0) {
+      completedMap.set(survey.id, false)
+      continue
+    }
+
     if (survey.resets_daily) {
       const doneToday = responses.some(r => r.completed_at >= lastMidnightUTC)
       completedMap.set(survey.id, doneToday)
@@ -62,13 +78,12 @@ export default async function TasksPage() {
   }
 
   const available = surveys.filter(s => !completedMap.get(s.id))
-  const done      = surveys.filter(s =>  completedMap.get(s.id))
+  const done = surveys.filter(s => completedMap.get(s.id))
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen">
       <UserNav />
       <main className="flex-1 w-full min-w-0 p-4 md:p-8 overflow-x-hidden">
-        {/* Header */}
         <div className="mb-5">
           <div className="flex items-start justify-between flex-wrap gap-3 mb-3">
             <div>
@@ -88,7 +103,6 @@ export default async function TasksPage() {
             </div>
           </div>
 
-          {/* Quick summary pills */}
           <div className="flex gap-2 flex-wrap">
             <span className="flex items-center gap-1.5 bg-brand-500/10 text-brand-400 border border-brand-500/20 text-xs font-700 px-3 py-1.5 rounded-full">
               <ClipboardList size={12} /> {available.length} available
@@ -98,6 +112,9 @@ export default async function TasksPage() {
                 <CheckCircle2 size={12} /> {done.length} done today
               </span>
             )}
+            <span className="flex items-center gap-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-700 px-3 py-1.5 rounded-full">
+              100 points = 1 USD
+            </span>
           </div>
         </div>
 
