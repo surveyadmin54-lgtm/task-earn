@@ -41,16 +41,16 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
       </div>
       <div>
         <label className="block text-sm text-slate-300 mb-1.5">Phone Number</label>
-        <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+254 7XX XXX XXX" />
+        <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+1XX XXX XXX" />
       </div>
       <div>
         <label className="block text-sm text-slate-300 mb-1.5">
-          Payment Info <span className="text-slate-500">(M-Pesa / Bank / PayPal)</span>
+          Payment Info <span className="text-slate-500">( Bank / PayPal)</span>
         </label>
         <input
           value={paymentInfo}
           onChange={e => setPaymentInfo(e.target.value)}
-          placeholder="e.g. M-Pesa: 0712345678"
+          placeholder="e.g. account number : 012345678"
         />
       </div>
       {msg && (
