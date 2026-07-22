@@ -56,7 +56,7 @@ export default async function ProfilePage() {
                   ${usdBalance}
                 </p>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  {points} points = ${usdBalance} USD
+                  100 points = 1 USD
                 </p>
               </div>
             </div>

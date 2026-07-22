@@ -47,11 +47,9 @@ export default async function DashboardPage() {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://yourdomain.com'
   const referralLink = `${siteUrl}/auth/register?ref=${profile?.referral_code ?? ''}`
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? '254700000000'
-  const whatsappLink = `https://wa.me/${whatsappNumber}?text=Hi%20TaskEarn%20Support%2C%20I%20need%20help%20with%20my%20account.`
 
   const stats = [
-    { label: 'Points Balance',      value: profile?.points ?? 0,                                                   icon: Star,           color: 'text-brand-400',  bg: 'bg-brand-500/10',  sub: `KSh ${profile?.points ?? 0}` },
+    { label: 'Points Balance',      value: profile?.points ?? 0,                                                   icon: Star,           color: 'text-brand-400',  bg: 'bg-brand-500/10',  sub: `${profile?.points ?? 0}` },
     { label: 'Tasks Completed',     value: completedSurveys?.length ?? 0,                                          icon: ClipboardList,  color: 'text-blue-400',   bg: 'bg-blue-500/10',   sub: 'All time' },
     { label: 'Referrals',           value: referrals?.length ?? 0,                                                 icon: Users,          color: 'text-purple-400', bg: 'bg-purple-500/10', sub: `+${(referrals?.length ?? 0) * 100} pts earned` },
     { label: 'Pending Withdrawals', value: withdrawals?.filter((w: any) => w.status === 'pending').length ?? 0,    icon: ArrowDownCircle, color: 'text-yellow-400', bg: 'bg-yellow-500/10', sub: 'Awaiting review' },
@@ -98,36 +96,7 @@ export default async function DashboardPage() {
           ))}
         </div>
 
-        {/* 2-col row: Referral + WhatsApp */}
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
-          <ReferralCard referralCode={profile?.referral_code ?? ''} referralLink={referralLink} />
-
-          <div className="card flex flex-col justify-between p-5">
-            <div>
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-[#25D366]/15 flex items-center justify-center text-[#25D366]">
-                  <WhatsAppIcon size={22} />
-                </div>
-                <div>
-                  <h2 className="font-display text-base font-700">Need Help?</h2>
-                  <p className="text-slate-500 text-xs">We reply within a few hours</p>
-                </div>
-              </div>
-              <p className="text-slate-400 text-sm mb-4">
-                Contact our support team directly on WhatsApp for account issues, withdrawal queries, or anything else.
-              </p>
-            </div>
-            <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-xl px-4 py-3 text-sm font-700 transition-colors w-full"
-            >
-              <WhatsAppIcon size={18} />
-              Chat on WhatsApp
-            </a>
-          </div>
-        </div>
+       
 
         {/* Recent Activity */}
         <div className="card">
