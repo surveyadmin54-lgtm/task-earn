@@ -5,15 +5,15 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 const COUNTRIES = [
-  'Kenya',
+  'United States',
+  'United Kingdom',
+  'Ghana',
   'Uganda',
   'Tanzania',
   'Rwanda',
   'Nigeria',
   'South Africa',
-  'Ghana',
-  'United States',
-  'United Kingdom',
+  'Kenya', 
   'Other',
 ]
 
